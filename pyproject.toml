@@ -1,0 +1,21 @@
+
+[project]
+name = "brief-6"
+version = "0.1.0"
+description = "NeuroVision AI - Part 3"
+requires-python = ">=3.12"
+dependencies = [
+    "kaggle>=2.2.5",
+    "seaborn>=0.13.2",
+    "streamlit>=1.65.0",
+    "matplotlib>=3.11.2",
+    "mlflow>=3.17.2",
+    "opencv-python>=5.0.0.93",
+    "numpy>=2.5.4",
+    "pyyaml>=6.0.3",
+    "ultralytics>=8.4.192",
+    "pandas>=3.1.0",
+]
+
+[tool.uv]
+package = false
