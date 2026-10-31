@@ -9,7 +9,6 @@ wheels/
 # Virtual environments
 .venv
 
-dataset_yolo/*
 notebook/runs
 runs/
 weights/
