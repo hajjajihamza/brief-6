@@ -1,11 +1,25 @@
 from pathlib import Path
 import mlflow
 from ultralytics import YOLO
-from const import DATA_YAML, RANDOM_KEY, REGISTER_MODEL_NAME, SIZE_IMAGE
+from .const import DATA_YAML, RANDOM_KEY, REGISTER_MODEL_NAME, SIZE_IMAGE
 import cv2
 import math
 import matplotlib.pyplot as plt
-from visualization import show_image
+from .visualization import show_image
+from mlflow.pyfunc import PythonModel
+
+
+class YOLOModel(PythonModel):
+
+    def load_context(self, context):
+        self.model = YOLO(context.artifacts["weights"])
+
+    def predict(self, context, model_input, params=None):
+        return self.model.predict(
+            source=model_input,
+            conf=0.25,
+            save=False
+        )
 
 # run train of model and return result
 def train_model(
@@ -27,11 +41,20 @@ def train_model(
     }
     
     # Start MLflow Run
-    with mlflow.start_run(run_name=run_dir.name):
+    with mlflow.start_run(run_name=run_dir.name) as run:
+        run_id = run.info.run_id
+        
         # Enregistrer les paramètres
         mlflow.log_params(params)
         
-        # Charger le modèle
+        # Log tags
+        mlflow.set_tags({
+            "project": "NeuroVision AI",
+            "framework": "Ultralytics YOLOv8",
+            "model_type": "Object Detection",
+        })
+        
+        # Load pretrained model
         model = YOLO(base_model)
         
         # Entraînement
@@ -52,39 +75,47 @@ def train_model(
             mosaic=0.0,
             mixup=0.0,
             
-            # Run dir
+            # Output directory
             project=str(run_dir.parent),
             name=run_dir.name,
             exist_ok=True
         )
         
-        # Charger le meilleur checkpoint
-        best_model_path = str(run_dir / "weights" / "best.pt")
-         
-        # Évaluation sur le test dataset
-        evaluate_model(
-            model = YOLO(best_model_path),
-            image_size = image_size,
-            batch = batch
-        )
-         
-        # Register model in MLflow Model Registry
-        model_uri = f"runs:/{mlflow.active_run().info.run_id}/model/best.pt"
+        # Best model path
+        best_model_path = run_dir / "weights" / "best.pt"
 
-        registered_model = mlflow.register_model(
-            model_uri=model_uri,
-            name=REGISTER_MODEL_NAME
-        )    
+        if not best_model_path.is_file():
+            raise FileNotFoundError(
+                f"Best model not found: {best_model_path}"
+            )
+            
+        # Load best model
+        best_model = YOLO(str(best_model_path))
         
-        # Enregistrer les Tags
-        mlflow.set_tags({
-            "project": "NeuroVision AI",
-            "framework": "Ultralytics YOLOv8",
-            "model_type": "Object Detection",
-        })
-
+        # Evaluate on test dataset
+        evaluate_model(
+            model=best_model,
+            image_size=image_size,
+            batch=batch
+        )
+        
+        # Log YOLO as MLflow PyFunc Model
+        model_info = mlflow.pyfunc.log_model(
+            name=run_dir.name,
+            python_model=YOLOModel(),
+            artifacts={
+                "weights": str(best_model_path)
+            }
+        )
+        
+        # Register model
+        registered_model = mlflow.register_model(
+            model_uri=model_info.model_uri,
+            name=REGISTER_MODEL_NAME
+        )
+        
         print("Run MLflow terminé avec succès !")
-        print("Run ID :", mlflow.active_run().info.run_id)
+        print("Run ID :", run_id)
         print("Model Name:", registered_model.name)
         print("Model Version:", registered_model.version)
     

@@ -1,6 +1,6 @@
 from sklearn.model_selection import train_test_split
 from collections import Counter
-from const import RANDOM_KEY
+from .const import RANDOM_KEY
 
 # Afficher la distribution des classes pour chaque split.
 def analyze_split_distribution(train, val, test):

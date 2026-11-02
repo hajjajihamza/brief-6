@@ -1,6 +1,5 @@
 import mlflow
-from ultralytics import YOLO
-from const import REGISTER_MODEL_NAME
+from .const import REGISTER_MODEL_NAME
 
 # set model alias
 def set_model_alias(name, version:int):   
@@ -15,19 +14,6 @@ def set_model_alias(name, version:int):
 
 # Charger le modèle YOLO depuis MLflow Model Registry en utilisant un alias.
 def load_model():
-    client = mlflow.MlflowClient()
-    alias = 'champion'
-    
-    # Récupérer le modèle associé à l'alias
-    model_version = client.get_model_version_by_alias(
-        name=REGISTER_MODEL_NAME,
-        alias=alias
+    return mlflow.pyfunc.load_model(
+        f"models:/{REGISTER_MODEL_NAME}@champion"
     )
-
-    # Récupérer le chemin du modèle dans MLflow
-    model_path = model_version.source
-
-    # Charger le modèle YOLO
-    model = YOLO(model_path)
-
-    return model

@@ -3,7 +3,7 @@ from pathlib import Path
 import yaml
 from ultralytics.data.utils import check_det_dataset
 from collections import Counter
-from const import YOLO_DATASET_PATH, EXTENSIONS, CLASS_NAMES, DATA_YAML
+from .const import YOLO_DATASET_PATH, EXTENSIONS, CLASS_NAMES, DATA_YAML
 
             
 # Préparer la structure du dataset pour YOLOv8

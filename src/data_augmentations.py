@@ -1,7 +1,7 @@
 from pathlib import Path
 import cv2
 import matplotlib.pyplot as plt
-from visualization import parse_annotations, draw_boxes, show_image
+from .visualization import parse_annotations, draw_boxes, show_image
 
 
 # Appliquer Horizontal Flip sur l'image et les Bounding Boxes

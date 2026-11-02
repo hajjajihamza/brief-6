@@ -1,4 +1,4 @@
-from const import EXTENSIONS, CLASS_NAMES
+from .const import EXTENSIONS, CLASS_NAMES
 import math
 from collections import Counter, defaultdict
 from hashlib import sha256

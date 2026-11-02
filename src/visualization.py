@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 import cv2
 import math
-from const import CLASS_NAMES
+from .const import CLASS_NAMES
 
 
 # Lire les annotations YOLO
@@ -147,9 +147,7 @@ def analyze_class_distribution(dataset):
 
     # Visualisation
     classes, counts = zip(*class_counts.items())
-
-    bars = plt.bar(classes, counts)
-
+    
     plt.figure(figsize=(9, 5))
     bars = plt.bar(classes, counts)
     plt.title("Distribution des images par classe")
