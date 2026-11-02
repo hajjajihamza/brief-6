@@ -60,54 +60,14 @@ def train_model(
         
         # Charger le meilleur checkpoint
         best_model_path = str(run_dir / "weights" / "best.pt")
-        best_model = YOLO(best_model_path)
-        
-         # Évaluation sur test data
-        metrics = best_model.val(
-            data=str(DATA_YAML),
-            split="test",
-            imgsz=image_size,
-            batch=batch,
-            plots=True
+         
+        # Évaluation sur le test dataset
+        evaluate_model(
+            model = YOLO(best_model_path),
+            image_size = image_size,
+            batch = batch
         )
-        
-        # Enregistrer les métriques
-        mlflow.log_metrics({
-            "precision": float(metrics.box.mp),
-            "recall": float(metrics.box.mr),
-            "mAP50": float(metrics.box.map50),
-            "mAP50_95": float(metrics.box.map),
-        })
-        
-        # Enregistrer le métrique mAP50-95 par classe
-        for class_id, class_name in best_model.names.items():
-             mlflow.log_metric(
-                f"mAP50_95_{class_name}",
-                float(metrics.box.maps[class_id])
-            )
-        
-        # Enregistrer le modèle comme Artifact
-        mlflow.log_artifact(
-            best_model_path,
-            artifact_path="model"
-        )
-        
-        # Enregistrer les résultats d'entraînement
-        results_csv = run_dir / "results.csv"
-        if results_csv.exists():
-            mlflow.log_artifact(
-                str(results_csv),
-                artifact_path="training_results"
-            )
-            
-        # Enregistrer les graphiques de validation
-        confusion_matrix = Path(metrics.save_dir) / "confusion_matrix.png"
-        if confusion_matrix.exists():
-            mlflow.log_artifact(
-                str(confusion_matrix),
-                artifact_path="evaluation"
-            )
-            
+         
         # Register model in MLflow Model Registry
         model_uri = f"runs:/{mlflow.active_run().info.run_id}/model/best.pt"
 
@@ -128,6 +88,53 @@ def train_model(
         print("Model Name:", registered_model.name)
         print("Model Version:", registered_model.version)
     
+    
+
+# Évaluer le modèle sur le test dataset
+def evaluate_model(
+    model: YOLO,
+    image_size: int,
+    batch: int
+):
+    # Évaluation
+    metrics = model.val(
+        data=str(DATA_YAML),
+        split="test",
+        imgsz=image_size,
+        batch=batch,
+        plots=True
+    )
+
+    # Extraire les métriques globales
+    evaluation_metrics = {
+        "precision": float(metrics.box.mp),
+        "recall": float(metrics.box.mr),
+        "mAP50": float(metrics.box.map50),
+        "mAP50_95": float(metrics.box.map),
+    }
+
+    # Enregistrer les métriques globales dans MLflow
+    mlflow.log_metrics(evaluation_metrics)
+
+    # Enregistrer le mAP50-95 par classe
+    for class_id, class_name in model.names.items():
+        mlflow.log_metric(
+            f"mAP50_95_{class_name}",
+            float(metrics.box.maps[class_id])
+        )
+
+    # Enregistrer la matrice de confusion
+    confusion_matrix = Path(metrics.save_dir) / "confusion_matrix.png"
+
+    if confusion_matrix.exists():
+        mlflow.log_artifact(
+            str(confusion_matrix),
+            artifact_path="evaluation"
+        )
+        
+    print('Évaluation sur le test dataset terminé avec succès !')
+
+
     
 # Predict et visualiser les prédictions    
 def predict(model, sources:list, run_dir:Path):

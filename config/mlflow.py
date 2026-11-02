@@ -20,13 +20,13 @@ MLFLOW_DB = MLFLOW_DB.resolve()
 ARTIFACTS_DIR = ARTIFACTS_DIR.resolve()
 
 # Create Tracking URI
-TRACKING_URI = "http://127.0.0.1:5000"
+MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
 
 # Experiment name
 EXPERIMENT_NAME = "neuro_vision_experiment"
 
 # Configure MLflow Client
-mlflow.set_tracking_uri(TRACKING_URI)
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 # Create or get Experiment
 mlflow.set_experiment(EXPERIMENT_NAME)
