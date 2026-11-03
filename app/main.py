@@ -1,7 +1,8 @@
-import streamlit as st
 import config.mlflow
+import streamlit as st
 import traceback
-from src.mlflow import load_model
+from src.mlflow import load_champion_model
+from PIL import Image
 
 
 # ==================================================
@@ -24,12 +25,12 @@ st.write(
 
 
 # ==================================================
-# 2. Chargement du modèle Champion depuis MLflow
+# 2. Chargement du modèle Champion
 # ==================================================
 
 @st.cache_resource
 def load_modele():
-    return load_model()
+    return load_champion_model()
 
 
 # ==================================================
@@ -41,12 +42,12 @@ try:
     model = load_modele()
 
     st.success(
-        "Modèle Champion chargé avec succès depuis MLflow."
+        "Modèle chargé avec succès."
     )
 
 except Exception as error:
 
-    st.error("Erreur lors du chargement du modèle Champion.")
+    st.error("Erreur lors du chargement du modèle.")
 
     st.exception(error)
 
@@ -71,8 +72,11 @@ if uploaded_file is not None:
 
     try:
 
+        # Convertir UploadedFile en image PIL
+        image = Image.open(uploaded_file).convert("RGB")
+
         st.image(
-            uploaded_file,
+            image,
             caption="Image IRM sélectionnée",
             use_container_width=True
         )
@@ -97,14 +101,14 @@ if uploaded_file is not None:
 
                 # Effectuer la prédiction
                 results = model.predict(
-                    source=uploaded_file.getvalue(),
+                    source=image,
                     conf=0.25,
                     save=False
                 )
 
                 result = results[0]
 
-            # Afficher l'image avec les bounding boxes
+            # Image annotée avec les bounding boxes
             annotated_image = result.plot()
 
             st.subheader("Résultat de la détection")
@@ -121,13 +125,15 @@ if uploaded_file is not None:
 
             if len(result.boxes) > 0:
 
-                for box in result.boxes:
+                for index, box in enumerate(result.boxes, start=1):
 
                     class_id = int(box.cls[0])
 
                     confidence = float(box.conf[0])
 
                     class_name = result.names[class_id]
+
+                    st.write(f"### Détection {index}")
 
                     st.write(
                         f"**Classe :** {class_name}"

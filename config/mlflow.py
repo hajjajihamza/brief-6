@@ -20,7 +20,7 @@ MLFLOW_DB = MLFLOW_DB.resolve()
 ARTIFACTS_DIR = ARTIFACTS_DIR.resolve()
 
 # Create Tracking URI
-MLFLOW_TRACKING_URI = "https://nat-exclusive-conditional-cardiff.trycloudflare.com"
+MLFLOW_TRACKING_URI = "http://127.0.0.1:5000/"
 
 # Experiment name
 EXPERIMENT_NAME = "neuro_vision_experiment"
